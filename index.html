@@ -270,6 +270,70 @@
       tbody tr { padding: 12px 0; border-bottom: 1px solid var(--border); }
       tbody td { border: none; padding: 6px 24px; }
     }
+
+    /* ===== DETAIL MODAL ===== */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+      overflow-y: auto; padding: 40px 16px;
+    }
+    .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border); border-radius: 24px;
+      width: 100%; max-width: 760px; padding: 48px; position: relative;
+      box-shadow: var(--shadow); animation: slideUp .25s ease;
+    }
+    @keyframes slideUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    .modal-close {
+      position: absolute; top: 20px; right: 20px;
+      background: var(--card-2); border: 1px solid var(--border); border-radius: 10px;
+      width: 36px; height: 36px; display: grid; place-items: center;
+      cursor: pointer; color: var(--text-muted); transition: background .2s;
+    }
+    .modal-close:hover { background: var(--border); }
+    .modal-week-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 18px; border-radius: 999px; font-size: 13px; font-weight: 700;
+      background: rgba(59,154,225,.12); color: var(--accent-blue);
+      border: 1px solid rgba(59,154,225,.3); margin-bottom: 20px;
+    }
+    .modal-title { font-size: 26px; font-weight: 700; color: var(--text-pink); margin-bottom: 32px; line-height: 1.3; }
+    .modal-section { margin-bottom: 28px; }
+    .modal-section-head {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--accent-teal); margin-bottom: 14px;
+    }
+    .modal-section-head svg { flex-shrink: 0; }
+    .modal-section p, .modal-section li {
+      color: var(--text-muted); font-size: 16px; line-height: 1.8;
+    }
+    .modal-section ul { list-style: none; display: flex; flex-direction: column; gap: 10px; padding: 0; }
+    .modal-section ul li { display: flex; gap: 10px; }
+    .modal-section ul li::before {
+      content: ''; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent-teal); flex-shrink: 0; margin-top: 9px;
+    }
+    .modal-step {
+      background: var(--card-2); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px 20px; margin-bottom: 10px;
+    }
+    .modal-step-num {
+      font-size: 12px; font-weight: 700; color: var(--accent-blue);
+      text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px;
+    }
+    .modal-step p { color: var(--text-muted); font-size: 15px; line-height: 1.7; margin: 0; }
+    .modal-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .modal-dl-btn {
+      display: inline-flex; align-items: center; gap: 12px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal));
+      color: #fff; font-size: 16px; font-weight: 600; border: none; cursor: pointer;
+      padding: 14px 28px; border-radius: 999px; text-decoration: none;
+      transition: opacity .2s, transform .2s;
+    }
+    .modal-dl-btn:hover { opacity: .88; transform: translateY(-2px); }
+    @media (max-width: 600px) { .modal-box { padding: 28px 20px; } .modal-title { font-size: 20px; } }
+
   </style>
 </head>
 <body>
@@ -540,7 +604,13 @@
       </div>
       <p class="w-title">${w.title}</p>
       <p class="w-desc">${w.desc}</p>
-      <button class="dl-btn" onclick="downloadExercise(${w.n})">${dlIcon} Xem bài tập</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:auto">
+        <button class="dl-btn" onclick="openDetail(${w.n})" style="text-decoration:none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Xem chi tiết
+        </button>
+        <button class="dl-btn" onclick="downloadExercise(${w.n})">${dlIcon} Tải file</button>
+      </div>
     </div>
   `).join('');
 
@@ -575,6 +645,158 @@
     window.open(toDownloadLink(w.link), '_blank');
   }
 
+
+  /* ===== WEEK DETAIL DATA ===== */
+  const weekDetails = {
+    1: {
+      muctieu: [
+        "Thực hành các thao tác quản lý tệp và thư mục cơ bản trên hệ điều hành Windows.",
+        "Nắm vững sự khác biệt giữa xóa thông thường (Recycle Bin) và xóa vĩnh viễn (Shift + Delete).",
+        "Xây dựng thói quen đặt tên tệp/thư mục có hệ thống, rõ ràng."
+      ],
+      quyTrinh: [
+        { title: "Bước 1 – Tạo cấu trúc thư mục", content: "Mở File Explorer (Windows + E), tạo thư mục gốc ThucHanh_DoXuanKhiem trên ổ D:, bên trong tạo thư mục con TaiLieu." },
+        { title: "Bước 2 – Tạo và đổi tên tệp", content: "Tạo tệp văn bản GhiChu.txt, sau đó đổi tên thành GhiChuQuanTrong.txt bằng chức năng Rename." },
+        { title: "Bước 3 – Sao chép và Di chuyển", content: "Thực hành Copy & Paste tệp GhiChuQuanTrong.txt sang thư mục TaiLieu, sau đó dùng Cut & Paste để di chuyển tệp DiChuyen.txt." },
+        { title: "Bước 4 – Xóa và Xóa vĩnh viễn", content: "Xóa tệp vào Recycle Bin bằng phím Delete, sau đó thực hiện Shift + Delete để xóa vĩnh viễn tệp DiChuyen.txt và quan sát cảnh báo của hệ thống." },
+        { title: "Bước 5 – Khôi phục tệp", content: "Mở Recycle Bin, tìm lại tệp GhiChuQuanTrong.txt đã xóa và thực hiện Restore để khôi phục về vị trí ban đầu." }
+      ]
+    },
+    2: {
+      muctieu: [
+        "Biết cách sử dụng các toán tử tìm kiếm nâng cao (site:, filetype:, AND, OR) trên Google Scholar, IEEE Xplore, Scopus.",
+        "Đánh giá độ tin cậy của tài liệu học thuật theo 5 tiêu chí: tác giả, nhà xuất bản, phương pháp, trích dẫn, tính cập nhật.",
+        "Thu thập và tổng hợp 10 tài liệu có chọn lọc về chủ đề 'Tác động của AI đến thị trường việc làm'."
+      ],
+      quyTrinh: [
+        { title: "Bước 1 – Xác định phạm vi tìm kiếm", content: "Chọn chủ đề 'Tác động của AI đến thị trường việc làm', giới hạn thời gian 2016–2025, tập trung 3 nội dung: ngành nghề bị ảnh hưởng, kỹ năng cần thiết, chính sách ứng phó." },
+        { title: "Bước 2 – Tìm kiếm trên cơ sở dữ liệu học thuật", content: "Sử dụng Google Scholar, IEEE Xplore, Scopus với các từ khóa kết hợp toán tử. Thu thập được 10 tài liệu gồm 5 bài báo khoa học từ NBER, IMF, OECD, Yale Budget Lab, Anthropic Research và 5 tài liệu khác." },
+        { title: "Bước 3 – Đánh giá độ tin cậy", content: "Xây dựng bảng đánh giá 5 tiêu chí (thang điểm 1–5 mỗi tiêu chí, tổng 25 điểm). Phần lớn tài liệu đạt mức 'Rất cao' (21–25 điểm), điển hình là Hampole et al. 2025 đạt 24/25." },
+        { title: "Bước 4 – Tổng hợp và rút ra nhận định", content: "Phân tích xu hướng chung: AI đang tái cấu trúc lao động toàn cầu, đặc biệt tác động đến các công việc lặp đi lặp lại. Sinh viên CNTT cần chủ động định hướng kỹ năng phù hợp kỷ nguyên AI." }
+      ]
+    },
+    3: {
+      muctieu: [
+        "Hiểu và áp dụng được các nguyên tắc viết Prompt hiệu quả: xác định vai trò, bối cảnh, định dạng đầu ra.",
+        "So sánh 3 cấp độ Prompt (Cơ bản → Cải tiến → Nâng cao) trên 3 tác vụ học tập thực tế.",
+        "Phân tích cơ chế tại sao Prompt nâng cao cho kết quả tốt hơn."
+      ],
+      quyTrinh: [
+        { title: "Tác vụ 1 – Tóm tắt tài liệu", content: "Thử nghiệm 3 phiên bản prompt từ 'Tóm tắt bài này' (cơ bản) → thêm cấu trúc 3 phần 200 từ (cải tiến) → gán vai trò trợ lý học thuật, quy trình 3 bước, ví dụ mẫu (nâng cao). Kết quả nâng cao đạt chuẩn nộp bài." },
+        { title: "Tác vụ 2 – Giải thích khái niệm", content: "Áp dụng với chủ đề Machine Learning. Prompt nâng cao yêu cầu AI đóng vai giáo viên dạy học sinh phổ thông, giải thích theo chuỗi tư duy 4 bước, có ẩn dụ sáng tạo và ví dụ từ điện thoại. Kết quả sinh động, phù hợp đối tượng." },
+        { title: "Tác vụ 3 – Tạo câu hỏi ôn tập", content: "Chủ đề Cách mạng Công nghiệp. Prompt nâng cao ứng dụng Thang Bloom, phân tầng 4 cấp độ (Nhớ / Hiểu / Vận dụng / Phân tích), mỗi câu kèm đáp án gợi ý 1–2 câu. Bộ câu hỏi đầy đủ và toàn diện." },
+        { title: "Phân tích hiệu quả", content: "Kết luận: Cấu trúc prompt gồm Vai trò + Bối cảnh + Quy trình + Định dạng + Ví dụ mẫu là công thức hiệu quả nhất. Mỗi yếu tố bổ sung giúp AI thu hẹp không gian đầu ra và tăng độ chính xác đáng kể." }
+      ]
+    },
+    4: {
+      muctieu: [
+        "Thực hành quản lý dự án nhóm hoàn chỉnh trên nền tảng số: Trello, Google Docs, Google Drive, Slack.",
+        "Tích hợp các công cụ với nhau để tạo quy trình làm việc liền mạch, tối ưu hiệu suất cá nhân và nhóm.",
+        "Nhận diện và giải quyết 3 thách thức thực tế trong hợp tác trực tuyến."
+      ],
+      quyTrinh: [
+        { title: "Bước 1 – Thiết lập hệ thống công cụ", content: "Cập nhật profile đầy đủ trên 4 nền tảng. Tạo board Trello với 3 cột To-do / Doing / Done, tích hợp trực tiếp link Google Drive và Google Docs vào các thẻ, thiết lập Label màu phân loại ưu tiên." },
+        { title: "Bước 2 – Thực hiện nhiệm vụ cá nhân", content: "Phụ trách nội dung Workshop 'Kỹ năng quản lý thời gian'. 100% nhiệm vụ trên Trello có Due Date và Description. Cập nhật tiến độ ≥4 lần/tuần bằng Checklist. Bình luận >10 lượt vào thẻ của thành viên khác để hỗ trợ." },
+        { title: "Bước 3 – Soạn thảo cộng tác", content: "Phụ trách Google Docs 'Kịch bản chi tiết'. Dùng chế độ Suggesting (Đề xuất chỉnh sửa) và Comment thay vì gửi file qua lại. Phân quyền riêng biệt: Viewer cho nhóm, Editor chỉ cho người phụ trách MC." },
+        { title: "Bước 4 – Quản lý tài nguyên có cấu trúc", content: "Tổ chức Google Drive 3 cấp thư mục: Gốc > 01.Nội dung / 02.Thiết kế / 03.Admin > Kịch bản / Profile. Naming convention: [TênDựÁn]_[HạngMục]_[TênFile]_[Ngày]_[Version]." },
+        { title: "Bước 5 – Xử lý thách thức", content: "Giải quyết 3 vấn đề thực tế: (1) Trôi tin nhắn → Pin message + gắn link vào Trello; (2) Xung đột soạn thảo → Quy tắc Suggesting mode + Version History; (3) Đồng bộ dữ liệu → Single source of truth trên Drive." }
+      ]
+    },
+    5: {
+      muctieu: [
+        "Ứng dụng ít nhất 3 công cụ AI tạo sinh (văn bản, hình ảnh, thiết kế) vào quy trình sản xuất nội dung số hoàn chỉnh.",
+        "So sánh hiệu quả giữa các công cụ AI khác nhau (Gemini vs Claude, Midjourney vs DALL-E, Canva vs Adobe Firefly).",
+        "Hiểu và xử lý các vấn đề đạo đức: hallucination, quyền sở hữu nội dung, vai trò con người trong quy trình AI."
+      ],
+      quyTrinh: [
+        { title: "Giai đoạn 1 – Sáng tạo văn bản với Google Gemini", content: "Dùng Gemini tạo dàn ý 5 phần cho bài viết 'Kiến trúc Xanh: Tầm nhìn đô thị bền vững 2050' và viết đoạn mở đầu giàu hình ảnh. Sau đó biên tập lại: loại thuật ngữ kỹ thuật, thêm câu chuyện cá nhân để bài gần gũi hơn." },
+        { title: "Giai đoạn 2 – Tạo hình ảnh với Midjourney/DALL-E", content: "Viết prompt tiếng Anh chi tiết cho 'Hero Image' bìa bài viết: thành phố tương lai 2050, vườn treo trên cao ốc, xe điện bay, tấm pin mặt trời. So sánh kết quả: Midjourney cho chất lượng điện ảnh hơn DALL-E." },
+        { title: "Giai đoạn 3 – Thiết kế với Canva AI", content: "Dùng Magic Edit thêm biểu tượng năng lượng mặt trời, Magic Media tạo icon đồng bộ. Dùng Photoshop điều chỉnh tương phản ảnh AI để văn bản chèn lên dễ đọc hơn." },
+        { title: "Kiểm chứng và hoàn thiện", content: "Fact-check các số liệu dự báo 2050 bằng báo cáo thực tế từ Liên Hợp Quốc. Kết luận: AI rút ngắn thời gian từ ý tưởng đến bản thảo từ 3 ngày xuống 3 giờ, nhưng cảm xúc và trải nghiệm con người vẫn không thể thay thế." }
+      ]
+    },
+    6: {
+      muctieu: [
+        "Nghiên cứu và so sánh chính sách sử dụng AI tạo sinh tại các trường đại học (RMIT vs ĐHQGHN).",
+        "Thực hành sử dụng AI có trách nhiệm: ghi lại prompt, kiểm chứng đầu ra, trích dẫn minh bạch.",
+        "Xây dựng bộ 6 nguyên tắc cá nhân về sử dụng AI trong học tập và nghiên cứu."
+      ],
+      quyTrinh: [
+        { title: "Phần 1 – Nghiên cứu chính sách AI", content: "Phân tích chính sách RMIT theo mô hình 3 vùng: Xanh (cho phép hoàn toàn) – Vàng (cần khai báo) – Đỏ (nghiêm cấm). So sánh với ĐHQGHN đang trong quá trình xây dựng quy chuẩn. Nhận định: mô hình phân vùng của RMIT thực tiễn và định hướng kỹ năng hơn." },
+        { title: "Phần 2 – Thực hành với AI có trách nhiệm", content: "Nhiệm vụ: tổng hợp tài liệu và lập dàn ý tiểu luận 'Tác động biến đổi khí hậu đến nông nghiệp ĐBSCL'. Ghi lại toàn bộ prompt đã sử dụng, đánh giá đầu ra, sửa số liệu sai (AI phóng đại diện tích nhiễm mặn), bổ sung ví dụ thực tiễn mô hình lúa–tôm Cà Mau." },
+        { title: "Phần 3 – Trích dẫn AI minh bạch", content: "Thêm tuyên bố vào phần Lời cam đoan: ghi rõ tên công cụ (ChatGPT/Gemini), phạm vi sử dụng (tìm ý tưởng + cấu trúc dàn ý), ngày truy cập. Toàn bộ nội dung chi tiết và số liệu do tác giả tự thực hiện và kiểm chứng." },
+        { title: "Phần 4 – Xây dựng bộ nguyên tắc cá nhân", content: "6 nguyên tắc cốt lõi: (1) Làm chủ – chịu trách nhiệm cuối cùng; (2) Kiểm chứng Zero-Trust – không tin mù quáng; (3) Minh bạch – luôn khai báo; (4) Bổ trợ – AI là co-pilot, không phải auto-pilot; (5) Bảo mật – không chia sẻ dữ liệu nhạy cảm; (6) Phát triển – dùng AI để nâng cao tư duy bậc cao." }
+      ]
+    },
+    7: {
+      muctieu: [
+        "Sử dụng công cụ AI học thuật chuyên sâu (Elicit, Consensus) để tìm kiếm và trích xuất thông tin từ bài báo khoa học.",
+        "Tổng hợp và so sánh 6 nghiên cứu về ứng dụng Carbon Quantum Dots (CQDs) làm cảm biến phát hiện ion kim loại nặng.",
+        "Phân tích xu hướng về phương pháp tổng hợp, giới hạn phát hiện (LOD) và nguyên liệu xanh trong lĩnh vực vật liệu nano."
+      ],
+      quyTrinh: [
+        { title: "Bước 1 – Xác định chủ đề và câu hỏi nghiên cứu", content: "Câu hỏi chính: 'Khả năng phát hiện của CQDs biến tính bề mặt đối với ion Hg²⁺ và Pb²⁺ thay đổi như thế nào theo phương pháp tổng hợp?' Xây dựng 4 câu hỏi phụ về LOD, N/S-doping, cơ chế FRET và nguyên liệu biomass." },
+        { title: "Bước 2 – Tìm kiếm với Elicit & Consensus", content: "Dùng Elicit tìm kiếm ngữ nghĩa, tự động trích xuất phương pháp tổng hợp, LOD và cơ chế từ PDF. Dùng Consensus đánh giá mức đồng thuận khoa học, lọc bài Q1/Q2. Từ khóa: 'carbon quantum dots' AND 'Hg2+ detection', 'N-doped CQDs heavy metal'." },
+        { title: "Bước 3 – Tổng hợp 6 bài báo", content: "Thu thập 6 nghiên cứu từ RSC Advances, Chemical Engineering Journal, Spectrochimica Acta, Scientific Reports, Applied Nanoscience, ACS Omega (2016–2024). LOD tốt nhất: 3 nM (Periyarselvam 2024) và 5,97 nM (Jain 2023) — đạt chuẩn WHO." },
+        { title: "Bước 4 – Phân tích và rút ra kết luận", content: "Kết luận: Thủy nhiệt là phương pháp phổ biến nhất (4/6 nghiên cứu). CQDs pha tạp N/S kết hợp MOF hoặc DNAzyme cho LOD thấp nhất. Xu hướng nguyên liệu xanh (bã trà, bã cà phê, tóc) ngày càng được ưa chuộng vì bền vững và chi phí thấp." }
+      ]
+    }
+  };
+
+  /* ===== OPEN / CLOSE MODAL ===== */
+  function openDetail(n) {
+    const w = weeks.find(x => x.n === n);
+    const d = weekDetails[n];
+    if (!w || !d) return;
+
+    const targetIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+    const processIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
+    const dlIcon2 = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
+    const muLabel = d.muctieu.map(m => `<li>${m}</li>`).join('');
+    const stepsHTML = d.quyTrinh.map((s,i) => `
+      <div class="modal-step">
+        <div class="modal-step-num">Bước ${i+1} · ${s.title}</div>
+        <p>${s.content}</p>
+      </div>`).join('');
+
+    document.getElementById('modalContent').innerHTML = `
+      <div class="modal-week-badge">${targetIcon} Tuần ${w.n}</div>
+      <div class="modal-title">${w.title}</div>
+      <div class="modal-section">
+        <div class="modal-section-head">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Mục tiêu bài học
+        </div>
+        <ul>${muLabel}</ul>
+      </div>
+      <hr class="modal-divider">
+      <div class="modal-section">
+        <div class="modal-section-head">
+          ${processIcon} Quá trình thực hiện
+        </div>
+        ${stepsHTML}
+      </div>
+      <hr class="modal-divider">
+      <a class="modal-dl-btn" href="${toDownloadLink(w.link)}" target="_blank">${dlIcon2} Tải sản phẩm bài tập</a>
+    `;
+
+    document.getElementById('detailModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDetailModal() {
+    document.getElementById('detailModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeModal(e) {
+    if (e.target === document.getElementById('detailModal')) closeDetailModal();
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetailModal(); });
+
+
   /* ===== THEME TOGGLE ===== */
   const root = document.documentElement;
   const sun = document.getElementById('sunIcon');
@@ -586,5 +808,16 @@
     moon.style.display = isDark ? 'block' : 'none';
   });
 </script>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
+  <div class="modal-box" id="modalBox">
+    <button class="modal-close" onclick="closeDetailModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
 </body>
 </html>
